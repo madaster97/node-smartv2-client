@@ -567,6 +567,15 @@ export class Issuer<TClient extends Client> { // tslint:disable-line:no-unnecess
    * @param issuer Issuer Identifier or metadata URL
    */
   static discover(issuer: string): Promise<Issuer<Client>>;
+  
+  /**
+   * Loads OpenID Connect 1.0 Metadata document from a discoverable fhir server.
+   * When the issuer argument contains '.well-known' we load that document.
+   * Else, we'll assume the issuer is the base of the fhir server, and 
+   * /.well-known/smart-configuration will be appended.
+   * @param issuer Fhir Issuer base URL
+   */
+  static fhirDiscover(issuer: string): Promise<Issuer<Client>>;
 
   /**
    * Performs OpenID Provider Issuer Discovery based on End-User input.
