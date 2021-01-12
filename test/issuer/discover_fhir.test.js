@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-// const sinon = require('sinon');
 const nock = require('nock');
 
 const { Issuer } = require('../../lib');
@@ -12,6 +11,11 @@ const capabilitySuccess = {
   token_endpoint: 'https://op.example.com/oauth2/v4/token',
   capabilities: ['sso-openid-connect'],
   code_challenge_methods_supported: ['S256'],
+};
+
+const trailingIssuerSlash = {
+  ...capabilitySuccess,
+  issuer: `${capabilitySuccess.issuer}/`,
 };
 
 const incapable = {
@@ -39,7 +43,7 @@ const issuerSuccess = {
 
 function incapableCheck(err) {
   expect(err.name).to.equal('RPError');
-  expect(err.message).to.eql('Issuer doesn\'t claim to be OIDC capable');
+  expect(err.message).to.eql('Fhir server doesn\'t claim to be sso-openid-connect capable');
   expect(err).to.have.property('body');
   if (err.body.capabilities) {
     expect(err.body.capabilities).to.be.an('array', 'response.capabilities is not an array');
@@ -81,6 +85,30 @@ describe('Issuer#fhirDiscover()', () => {
     return Issuer.fhirDiscover('https://op.example.com').then(successCheck);
   });
 
+  it('Respects trailing slash on discovery iss', function () {
+    nock('https://op.example.com', { allowUnmocked: true })
+      .get('/.well-known/smart-configuration')
+      .reply(200, capabilitySuccess);
+
+    nock('https://op.example.com', { allowUnmocked: true })
+      .get('/.well-known/openid-configuration')
+      .reply(200, issuerSuccess);
+
+    return Issuer.fhirDiscover('https://op.example.com/').then(successCheck);
+  });
+
+  it('Respects trailing slash on body.issuer', function () {
+    nock('https://op.example.com', { allowUnmocked: true })
+      .get('/.well-known/smart-configuration')
+      .reply(200, trailingIssuerSlash);
+
+    nock('https://op.example.com', { allowUnmocked: true })
+      .get('/.well-known/openid-configuration')
+      .reply(200, issuerSuccess);
+
+    return Issuer.fhirDiscover('https://op.example.com').then(successCheck);
+  });
+
   it('Requires sso-openid-connect capability', function () {
     nock('https://op.example.com', { allowUnmocked: true })
       .get('/.well-known/smart-configuration')
@@ -91,13 +119,14 @@ describe('Issuer#fhirDiscover()', () => {
       .reply(200, issuerSuccess);
 
     return Issuer.fhirDiscover('https://op.example.com')
-      .then(fail, function () {
+      .then(fail, function (err) {
         /**
          * We shouldn't request openid-config
          * even if `issuer` is populated
          */
         expect(nock.isDone()).to.be.false;
-      }, incapableCheck);
+        return err;
+      }).then(incapableCheck);
   });
 
   it('Requires capabilities to be an array', function () {
@@ -110,13 +139,14 @@ describe('Issuer#fhirDiscover()', () => {
       .reply(200, issuerSuccess);
 
     return Issuer.fhirDiscover('https://op.example.com')
-      .then(fail, function () {
+      .then(fail, function (err) {
         /**
          * We shouldn't request openid-config
          * even if `issuer` is populated
          */
         expect(nock.isDone()).to.be.false;
-      }, incapableCheck);
+        return err;
+      }).then(incapableCheck);
   });
 
   it('Requires issuer field', function () {
@@ -127,7 +157,7 @@ describe('Issuer#fhirDiscover()', () => {
     return Issuer.fhirDiscover('https://op.example.com')
       .then(fail, function (err) {
         expect(err.name).to.equal('RPError');
-        expect(err.message).to.eql('Fhir server did not present an \'issuer\' url');
+        expect(err.message).to.eql('Fhir server did not present an issuer url');
         expect(err).to.have.property('body');
         expect(err.body.issuer).to.not.exist;
       });
