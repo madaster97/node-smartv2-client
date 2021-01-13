@@ -61,7 +61,7 @@ function successCheck(issuer) {
 
 describe('Issuer#fhirDiscover()', () => {
   afterEach(nock.cleanAll);
-  it('accepts and assigns the discovered metadata', function () {
+  it('Accepts and assigns the discovered metadata', function () {
     nock('https://op.example.com', { allowUnmocked: true })
       .get('/.well-known/example-configuration')
       .reply(200, capabilitySuccess);
@@ -160,6 +160,23 @@ describe('Issuer#fhirDiscover()', () => {
         expect(err.message).to.eql('Fhir server did not present an issuer url');
         expect(err).to.have.property('body');
         expect(err.body.issuer).to.not.exist;
+      });
+  });
+
+  it('Populates fhir metadata on issuer', function () {
+    nock('https://op.example.com', { allowUnmocked: true })
+      .get('/.well-known/smart-configuration')
+      .reply(200, capabilitySuccess);
+
+    nock('https://op.example.com', { allowUnmocked: true })
+      .get('/.well-known/openid-configuration')
+      .reply(200, issuerSuccess);
+
+    return Issuer.fhirDiscover('https://op.example.com')
+      .then(function (issuer) {
+        expect(issuer.metadata).to.have.property('iss', 'https://op.example.com');
+        expect(issuer.metadata.fhirCapabilities).to.be.an('array');
+        expect(issuer.metadata.fhirCapabilities).to.include('sso-openid-connect');
       });
   });
 });

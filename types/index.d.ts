@@ -35,6 +35,10 @@ export type ResponseType = 'code' | 'id_token' | 'code id_token' | 'id_token tok
  * @see https://github.com/panva/node-openid-client/blob/master/docs/README.md#client-authentication-methods
  */
 export type ClientAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt' | 'tls_client_auth' | 'self_signed_tls_client_auth' | 'none';
+/**
+ * 
+ */
+export type FhirCapability = "launch-ehr"|"launch-standalone"|"authorize-post"|"client-public"|"client-confidential-symmettric"|"sso-openid-connect"|"context-banner"|"context-style"|"context-ehr-patient"|"context-ehr-encounter"|"context-standalone-patient"|"context-standalone-encounter"|"permission-offline"|"permission-patient"|"permission-user"|"permission-v1"|"permission-v2";
 
 /**
  * @see https://github.com/panva/node-openid-client/blob/master/docs/README.md#new-clientmetadata-jwks
@@ -510,6 +514,11 @@ export interface IssuerMetadata {
   revocation_endpoint_auth_signing_alg_values_supported?: string[];
   request_object_signing_alg_values_supported?: string[];
   mtls_endpoint_aliases?: MtlsEndpointAliases;
+  /**
+   * The base URL of this issuer's Fhir Server
+   */
+  iss?: string;
+  fhirCapabilities?: FhirCapability[];
 
   [key: string]: unknown;
 }
@@ -571,11 +580,11 @@ export class Issuer<TClient extends Client> { // tslint:disable-line:no-unnecess
   /**
    * Loads OpenID Connect 1.0 Metadata document from a discoverable fhir server.
    * When the issuer argument contains '.well-known' we load that document.
-   * Else, we'll assume the issuer is the base of the fhir server, and 
-   * /.well-known/smart-configuration will be appended.
-   * @param issuer Fhir Issuer base URL
+   * Else, we'll assume the issuer is the base (iss) of the fhir server,
+   * and append /.well-known/smart-configuration.
+   * @param iss Fhir Issuer base URL
    */
-  static fhirDiscover(issuer: string): Promise<Issuer<Client>>;
+  static fhirDiscover(iss: string): Promise<Issuer<Client>>;
 
   /**
    * Performs OpenID Provider Issuer Discovery based on End-User input.
