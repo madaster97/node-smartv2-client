@@ -49,6 +49,7 @@ function incapableCheck(err) {
     expect(err.body.capabilities).to.be.an('array', 'response.capabilities is not an array');
     expect(err.body.capabilities).to.not.include('sso-openid-connect');
   }
+  return err;
 }
 
 function successCheck(issuer) {
@@ -57,6 +58,7 @@ function successCheck(issuer) {
   expect(issuer).to.have.property('jwks_uri', 'https://op.example.com/oauth2/v3/certs');
   expect(issuer).to.have.property('token_endpoint', 'https://op.example.com/oauth2/v4/token');
   expect(issuer).to.have.property('userinfo_endpoint', 'https://op.example.com/oauth2/v3/userinfo');
+  return issuer;
 }
 
 describe('Issuer#fhirDiscover()', () => {

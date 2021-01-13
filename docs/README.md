@@ -33,6 +33,7 @@ If you or your business use openid-client, please consider becoming a [sponsor][
   - [issuer.metadata](#issuermetadata)
   - [issuer.keystore([forceReload])](#issuerkeystoreforcereload)
 - [Issuer.discover(issuer)](#issuerdiscoverissuer)
+- [Issuer.fhirDiscover(iss)](#issuerfhirdiscoveriss)
 - [Issuer.webfinger(input)](#issuerwebfingerinput)
 <!-- TOC Issuer END -->
 
@@ -124,6 +125,17 @@ openid-configuration and oauth-authorization-server requests.
 **This is the recommended method of getting yourself an Issuer instance.**
 
 - `issuer`: `<string>` Issuer Identifier or metadata URL
+- Returns: `Promise<Issuer>`
+
+---
+
+#### `Issuer.fhirDiscover(iss)`
+
+Loads OpenID Connect 1.0 Metadata document from a discoverable fhir server.  When the 
+issuer argument contains '.well-known' we load that document. Else, we'll assume the issuer is 
+the base (iss) of the fhir server, and append /.well-known/smart-configuration.
+
+- `iss`: `<string>` Base URL of the Issuer's FHIR Server
 - Returns: `Promise<Issuer>`
 
 ---
@@ -607,6 +619,7 @@ You change options on a per-request basis by assigning a function to
 
 - `Issuer` constructor to override the following request's options
   - discovery
+  - fhirDiscovery
   - webfinger
 - `Issuer` instance to override fetching issuer's jwks_uri
 - `issuer.Client` constructor to override the following request's options
@@ -1004,6 +1017,7 @@ request instance.
 [sponsor-auth0]: https://auth0.com/developers?utm_source=GHsponsor&utm_medium=GHsponsor&utm_campaign=openid-client&utm_content=auth
 [support-sponsor]: https://github.com/sponsors/panva
 [jose]: https://github.com/panva/jose
+[fhir-discovery]: http://www.hl7.org/fhir/smart-app-launch/conformance/index.html#using-well-known
 [webfinger-discovery]: https://openid.net/specs/openid-connect-discovery-1_0.html#IssuerDiscovery
 [got-library]: https://github.com/sindresorhus/got/tree/v11.8.0
 [client-authentication]: https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication
